@@ -84,26 +84,25 @@ program:		statement_list END				{ printf("Program complete."); shutdown(); exit(
 statement_list:		statement					
 		|	statement statement_list
 		;
-statement:		command SEP					{ prompt(); }
-		|	error '\n' 					{ yyerrok; prompt(); }
+statement:		command SEP						{ prompt(); }
+		|	error '\n' 							{ yyerrok; prompt(); }
 		;
-command:		PENUP						{ penup(); }
-		|	PENDOWN						{ pendown(); }
-		|	PRINT						{ print(); }
-		|	SAVE PATH					{ save(); }
+command:		PENUP							{ penup(); }
+		|	PENDOWN								{ pendown(); }
+		|	PRINT								{ print(); }
+		|	SAVE PATH							{ save(); }
 		|	CHANGE_COLOR NUMBER NUMBER NUMBER	{ change_color($2, $3, $4); }
-		|	CLEAR						{ clear(); }
-		|	TURN NUMBER					{ turn(); }
-		|	MOVE NUMBER					{ move($2); }
-		|	GOTO						{ goto(); }
-		|	WHERE						{ where(); }
+		|	CLEAR								{ clear(); }
+		|	TURN NUMBER							{ turn($2); }
+		|	MOVE NUMBER							{ move($2); }
+		|	GOTO NUMBER NUMBER					{ goto($2, $3); }
+		|	WHERE								{ where(); }
 		|	expression_list
 		;
 expression_list:	expression
 		|	expression expression_list
-		// Complete these and any missing rules
 		;
-expression:		NUMBER PLUS expression				{ $$ = $1 + $3; }
+expression:		NUMBER PLUS expression			{ $$ = $1 + $3; }
 		|	NUMBER MULT expression				{ $$ = $1 * $3; }
 		|	NUMBER SUB expression				{ $$ = $1 - $3; }
 		|	NUMBER DIV expression				{ $$ = $1 / $3; }
@@ -121,6 +120,18 @@ int yyerror(const char* s){
 	printf("Error: %s\n", s);
 	return -1;
 };
+
+// Add functions here
+
+// Moves the turtle to a particular coordinate. Draws if the pen is down, otherwise, does not. 
+void goto(int x, int y) {
+	// 
+}
+
+// Prints the current coordinates. 
+void where() {
+	printf("Current coordinates: )
+}
 
 void prompt(){
 	printf("gv_logo > ");
