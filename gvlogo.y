@@ -45,7 +45,7 @@ void clear();
 void save(const char* path);
 void shutdown();
 //add goto and where
-void goto(int x, int y);
+void go_to(double x, double y);
 void where();
 
 %}
@@ -58,6 +58,10 @@ void where();
 %locations
 
 %token SEP
+%token EQUALS
+%token MINUS
+%token SEMI
+%token NOT_SURE
 %token PENUP
 %token PENDOWN
 %token PRINT
@@ -70,6 +74,7 @@ void where();
 %token NUMBER
 %token END
 %token SAVE
+%token<s> PATH
 %token PLUS SUB MULT DIV
 %token<s> STRING QSTRING
 %type<f> expression expression_list NUMBER
@@ -89,13 +94,13 @@ statement:		command SEP						{ prompt(); }
 		;
 command:		PENUP							{ penup(); }
 		|	PENDOWN								{ pendown(); }
-		|	PRINT								{ print(); }
-		|	SAVE PATH							{ save(); }
+		|	PRINT								{ print_it(); }
+		|	SAVE PATH							{ save($2); }
 		|	CHANGE_COLOR NUMBER NUMBER NUMBER	{ change_color($2, $3, $4); }
 		|	CLEAR								{ clear(); }
 		|	TURN NUMBER							{ turn($2); }
 		|	MOVE NUMBER							{ move($2); }
-		|	GOTO NUMBER NUMBER					{ goto($2, $3); }
+		|	GOTO NUMBER NUMBER					{ go_to($2, $3); }
 		|	WHERE								{ where(); }
 		|	expression_list
 		;
@@ -124,13 +129,22 @@ int yyerror(const char* s){
 // Add functions here
 
 // Moves the turtle to a particular coordinate. Draws if the pen is down, otherwise, does not. 
-void goto(int x, int y) {
-	// 
+void go_to(double x2, double y2) { 
+	// draw if pendown
+	if(pen_state != 0){
+		SDL_SetRenderTarget(rend, texture);
+		SDL_RenderDrawLine(rend, x, y, x2, y2);
+		SDL_SetRenderTarget(rend, NULL);
+		SDL_RenderCopy(rend, texture, NULL, NULL);
+	}
+	x = x2;
+	y = y2;
+
 }
 
 // Prints the current coordinates. 
 void where() {
-	printf("Current coordinates: )
+	printf("Current coordinates: %f, %f", x, y);
 }
 
 void prompt(){
