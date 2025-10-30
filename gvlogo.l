@@ -18,7 +18,6 @@ end	            { return END; }
 \$[A-Z]	        { yylval.s = yytext[1] - 65; return VARIABLE; }
 penup           { return PENUP; }
 pendown         { return PENDOWN; }
-print           { return PRINT; }
 save            { return SAVE; }
 [a-zA-Z]+\.bmp  { return PATH; }
 color           { return COLOR; }

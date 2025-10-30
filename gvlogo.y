@@ -64,7 +64,6 @@ void where();
 %token NOT_SURE
 %token PENUP
 %token PENDOWN
-%token PRINT
 %token CHANGE_COLOR
 %token COLOR
 %token CLEAR
@@ -74,6 +73,7 @@ void where();
 %token NUMBER
 %token END
 %token SAVE
+%token<s> VARIABLE
 %token<s> PATH
 %token PLUS SUB MULT DIV
 %token<s> STRING QSTRING
@@ -89,14 +89,13 @@ program:		statement_list END				{ printf("Program complete."); shutdown(); exit(
 statement_list:		statement					
 		|	statement statement_list
 		;
-statement:		command SEP						{ prompt(); }
+statement:		command SEMI						{ prompt(); }
 		|	error '\n' 							{ yyerrok; prompt(); }
 		;
 command:		PENUP							{ penup(); }
 		|	PENDOWN								{ pendown(); }
-		|	PRINT								{ print_it(); }
 		|	SAVE PATH							{ save($2); }
-		|	CHANGE_COLOR NUMBER NUMBER NUMBER	{ change_color($2, $3, $4); }
+		|	COLOR NUMBER NUMBER NUMBER			{ change_color($2, $3, $4); }
 		|	CLEAR								{ clear(); }
 		|	TURN NUMBER							{ turn($2); }
 		|	MOVE NUMBER							{ move($2); }
@@ -130,21 +129,24 @@ int yyerror(const char* s){
 
 // Moves the turtle to a particular coordinate. Draws if the pen is down, otherwise, does not. 
 void go_to(double x2, double y2) { 
-	// draw if pendown
-	if(pen_state != 0){
-		SDL_SetRenderTarget(rend, texture);
-		SDL_RenderDrawLine(rend, x, y, x2, y2);
-		SDL_SetRenderTarget(rend, NULL);
-		SDL_RenderCopy(rend, texture, NULL, NULL);
+	if (x2 < x) {
+		turn(180);
 	}
-	x = x2;
-	y = y2;
+	move(x2); 
+	turn(180); 
+	if (y2 > y) {
+		turn(90);
+	}
+	else {
+		turn(270); 
+	}
 
+	move(y2);
 }
 
 // Prints the current coordinates. 
 void where() {
-	printf("Current coordinates: %f, %f", x, y);
+	printf("Current coordinates: %f, %f\n", x, y);
 }
 
 void prompt(){
@@ -164,6 +166,7 @@ void pendown() {
 }
 
 void move(int num){
+	printf("DRAW PLEASE!!!!\n");
 	event.type = DRAW_EVENT;
 	event.user.code = 1;
 	event.user.data1 = num;
