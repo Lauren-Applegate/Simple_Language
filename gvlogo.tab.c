@@ -1345,25 +1345,25 @@ yyreduce:
 
   case 19: /* expression: NUMBER PLUS expression  */
 #line 109 "gvlogo.y"
-                                                                { (yyval.f) = (yyvsp[-2].f) + (yyvsp[0].f); }
+                                                                { (yyval.f) = (yyvsp[-2].f) + (yyvsp[0].f); printf("%f\n", (yyval.f)); }
 #line 1350 "gvlogo.tab.c"
     break;
 
   case 20: /* expression: NUMBER MULT expression  */
 #line 110 "gvlogo.y"
-                                                                        { (yyval.f) = (yyvsp[-2].f) * (yyvsp[0].f); }
+                                                                        { (yyval.f) = (yyvsp[-2].f) * (yyvsp[0].f); printf("%f\n", (yyval.f)); }
 #line 1356 "gvlogo.tab.c"
     break;
 
   case 21: /* expression: NUMBER SUB expression  */
 #line 111 "gvlogo.y"
-                                                                        { (yyval.f) = (yyvsp[-2].f) - (yyvsp[0].f); }
+                                                                        { (yyval.f) = (yyvsp[-2].f) - (yyvsp[0].f); printf("%f\n", (yyval.f)); }
 #line 1362 "gvlogo.tab.c"
     break;
 
   case 22: /* expression: NUMBER DIV expression  */
 #line 112 "gvlogo.y"
-                                                                        { (yyval.f) = (yyvsp[-2].f) / (yyvsp[0].f); }
+                                                                        { (yyval.f) = (yyvsp[-2].f) / (yyvsp[0].f); printf("%f\n", (yyval.f)); }
 #line 1368 "gvlogo.tab.c"
     break;
 
@@ -1583,19 +1583,37 @@ int yyerror(const char* s){
 
 // Moves the turtle to a particular coordinate. Draws if the pen is down, otherwise, does not. 
 void go_to(double x2, double y2) { 
+	int distance; 
+	printf("Inside of go_to function.\n"); 
+	printf("%f, %f\n", x, y); 
+	printf("x2 = %f; y2 = %f\n", x2, y2); 
 	if (x2 < x) {
-		turn(180);
+		printf("x2 < x\n"); 
+		distance = x - x2; 
+		turn(180); 
+		move(distance);
+		turn(180); 
 	}
-	move(x2); 
-	turn(180); 
+	if (x2 > x) {
+		printf("x2 > x\n");
+		distance = x2 - x; 
+		move(distance);
+	}
+	
+	if (y2 < y) {
+		printf("y2 < y\n"); 
+		distance = y - y2; 
+		turn(270);
+		move(distance);
+		turn(90); 
+	}
 	if (y2 > y) {
-		turn(90);
+		printf("y2 > y\n"); 
+		distance = y2 - y; 
+		turn(90); 
+		move(distance);
+		turn(270);
 	}
-	else {
-		turn(270); 
-	}
-
-	move(y2);
 }
 
 // Prints the current coordinates. 
@@ -1611,16 +1629,18 @@ void penup(){
 	event.type = PEN_EVENT;		
 	event.user.code = 0;
 	SDL_PushEvent(&event);
+	printf("Pen is up.\n"); 
 }
 
 void pendown() {
 	event.type = PEN_EVENT;		
 	event.user.code = 1;
 	SDL_PushEvent(&event);
+	printf("Pen is down.\n");
 }
 
 void move(int num){
-	printf("DRAW PLEASE!!!!\n");
+	printf("Moved to %d\n", num); 
 	event.type = DRAW_EVENT;
 	event.user.code = 1;
 	event.user.data1 = num;
