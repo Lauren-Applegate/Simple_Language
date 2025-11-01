@@ -1,3 +1,6 @@
+// Simple Language Project 
+// by: Colin Nagley and Lauren Applegate
+
 %{
 #include <stdio.h>
 #include <stdlib.h>

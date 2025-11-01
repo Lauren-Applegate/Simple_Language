@@ -1,3 +1,6 @@
+// Simple Language Project 
+// by: Colin Nagley and Lauren Applegate
+
 %{
 #define WIDTH 640
 #define HEIGHT 480
