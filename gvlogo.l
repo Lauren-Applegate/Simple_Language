@@ -15,7 +15,7 @@ end	            { return END; }
 \*              { return MULT; }
 \/              { return DIV; }
 ;	            { return SEMI; }
-\$[A-Z]	        { yylval.s = yytext[1] - 65; return VARIABLE; }
+\$[A-Z]	        { yylval.v = yytext[1] - 65; return VARIABLE; }
 penup           { return PENUP; }
 pendown         { return PENDOWN; }
 save            { return SAVE; }
@@ -28,7 +28,7 @@ goto            { return GOTO; }
 where           { return WHERE; }
 sep             { return NOT_SURE; }
 
-[ \t\r\n]			;
+[ \t\r\n]+			;
 .			{ yyerror("Lexing Syntax error.\n"); } 
 
 %%

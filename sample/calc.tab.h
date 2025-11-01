@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_GVLOGO_TAB_H_INCLUDED
-# define YY_YY_GVLOGO_TAB_H_INCLUDED
+#ifndef YY_YY_CALC_TAB_H_INCLUDED
+# define YY_YY_CALC_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -54,32 +54,18 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    SEP = 258,                     /* SEP  */
-    EQUALS = 259,                  /* EQUALS  */
-    MINUS = 260,                   /* MINUS  */
-    SEMI = 261,                    /* SEMI  */
-    NOT_SURE = 262,                /* NOT_SURE  */
-    PENUP = 263,                   /* PENUP  */
-    PENDOWN = 264,                 /* PENDOWN  */
-    CHANGE_COLOR = 265,            /* CHANGE_COLOR  */
-    COLOR = 266,                   /* COLOR  */
-    CLEAR = 267,                   /* CLEAR  */
-    TURN = 268,                    /* TURN  */
-    LOOP = 269,                    /* LOOP  */
-    MOVE = 270,                    /* MOVE  */
-    NUMBER = 271,                  /* NUMBER  */
-    END = 272,                     /* END  */
-    SAVE = 273,                    /* SAVE  */
-    VARIABLE = 274,                /* VARIABLE  */
-    PATH = 275,                    /* PATH  */
-    PLUS = 276,                    /* PLUS  */
-    SUB = 277,                     /* SUB  */
-    MULT = 278,                    /* MULT  */
-    DIV = 279,                     /* DIV  */
-    STRING = 280,                  /* STRING  */
-    QSTRING = 281,                 /* QSTRING  */
-    GOTO = 282,                    /* GOTO  */
-    WHERE = 283                    /* WHERE  */
+    NUMBER = 258,                  /* NUMBER  */
+    VARIABLE = 259,                /* VARIABLE  */
+    EQUALS = 260,                  /* EQUALS  */
+    PLUS = 261,                    /* PLUS  */
+    MINUS = 262,                   /* MINUS  */
+    MULT = 263,                    /* MULT  */
+    DIV = 264,                     /* DIV  */
+    LEFT_PAREN = 265,              /* LEFT_PAREN  */
+    RIGHT_PAREN = 266,             /* RIGHT_PAREN  */
+    SEMI = 267,                    /* SEMI  */
+    END = 268,                     /* END  */
+    UMINUS = 269                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -88,13 +74,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 54 "gvlogo.y"
+#line 10 "calc.y"
 
-	float f;
-	char v; 
-	char* s;
+	double num;
+	char var;
 
-#line 98 "gvlogo.tab.h"
+#line 83 "calc.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -102,25 +87,11 @@ typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
-/* Location type.  */
-#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
-typedef struct YYLTYPE YYLTYPE;
-struct YYLTYPE
-{
-  int first_line;
-  int first_column;
-  int last_line;
-  int last_column;
-};
-# define YYLTYPE_IS_DECLARED 1
-# define YYLTYPE_IS_TRIVIAL 1
-#endif
-
 
 extern YYSTYPE yylval;
-extern YYLTYPE yylloc;
+
 
 int yyparse (void);
 
 
-#endif /* !YY_YY_GVLOGO_TAB_H_INCLUDED  */
+#endif /* !YY_YY_CALC_TAB_H_INCLUDED  */

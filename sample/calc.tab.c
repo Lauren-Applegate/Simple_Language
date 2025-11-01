@@ -67,60 +67,16 @@
 
 
 /* First part of user prologue.  */
-#line 1 "gvlogo.y"
+#line 1 "calc.y"
 
-#define WIDTH 640
-#define HEIGHT 480
-
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_thread.h>
-
-static SDL_Window* window;
-static SDL_Renderer* rend;
-static SDL_Texture* texture;
-static SDL_Thread* background_id;
-static SDL_Event event;
-static int running = 1;
-static const int PEN_EVENT = SDL_USEREVENT + 1;
-static const int DRAW_EVENT = SDL_USEREVENT + 2;
-static const int COLOR_EVENT = SDL_USEREVENT + 3;
-
-typedef struct color_t {
-	unsigned char r;
-	unsigned char g;
-	unsigned char b;
-} color;
-
-static color current_color;
-static double x = WIDTH / 2;
-static double y = HEIGHT / 2;
-static int pen_state = 1;
-static double direction = 0.0;
-
+ 
 int yylex(void);
-int yyerror(const char* s);
-double symbol_table[26]; 
-void startup();
-int run(void* data);
-void prompt();
-void penup();
-void pendown();
-void move(int num);
-void turn(int dir);
-void output(const char* s);
-void change_color(int r, int g, int b);
-void clear();
-void save(const char* path);
-void shutdown();
-//add goto and where
-void go_to(double x, double y);
-void where();
+void yyerror(const char *s);
+double symbol_table[26];
 
-
-#line 124 "gvlogo.tab.c"
+#line 80 "calc.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -143,7 +99,7 @@ void where();
 #  endif
 # endif
 
-#include "gvlogo.tab.h"
+#include "calc.tab.h"
 /* Symbol kind.  */
 enum yysymbol_kind_t
 {
@@ -151,41 +107,24 @@ enum yysymbol_kind_t
   YYSYMBOL_YYEOF = 0,                      /* "end of file"  */
   YYSYMBOL_YYerror = 1,                    /* error  */
   YYSYMBOL_YYUNDEF = 2,                    /* "invalid token"  */
-  YYSYMBOL_SEP = 3,                        /* SEP  */
-  YYSYMBOL_EQUALS = 4,                     /* EQUALS  */
-  YYSYMBOL_MINUS = 5,                      /* MINUS  */
-  YYSYMBOL_SEMI = 6,                       /* SEMI  */
-  YYSYMBOL_NOT_SURE = 7,                   /* NOT_SURE  */
-  YYSYMBOL_PENUP = 8,                      /* PENUP  */
-  YYSYMBOL_PENDOWN = 9,                    /* PENDOWN  */
-  YYSYMBOL_CHANGE_COLOR = 10,              /* CHANGE_COLOR  */
-  YYSYMBOL_COLOR = 11,                     /* COLOR  */
-  YYSYMBOL_CLEAR = 12,                     /* CLEAR  */
-  YYSYMBOL_TURN = 13,                      /* TURN  */
-  YYSYMBOL_LOOP = 14,                      /* LOOP  */
-  YYSYMBOL_MOVE = 15,                      /* MOVE  */
-  YYSYMBOL_NUMBER = 16,                    /* NUMBER  */
-  YYSYMBOL_END = 17,                       /* END  */
-  YYSYMBOL_SAVE = 18,                      /* SAVE  */
-  YYSYMBOL_VARIABLE = 19,                  /* VARIABLE  */
-  YYSYMBOL_PATH = 20,                      /* PATH  */
-  YYSYMBOL_PLUS = 21,                      /* PLUS  */
-  YYSYMBOL_SUB = 22,                       /* SUB  */
-  YYSYMBOL_MULT = 23,                      /* MULT  */
-  YYSYMBOL_DIV = 24,                       /* DIV  */
-  YYSYMBOL_STRING = 25,                    /* STRING  */
-  YYSYMBOL_QSTRING = 26,                   /* QSTRING  */
-  YYSYMBOL_GOTO = 27,                      /* GOTO  */
-  YYSYMBOL_WHERE = 28,                     /* WHERE  */
-  YYSYMBOL_29_n_ = 29,                     /* '\n'  */
-  YYSYMBOL_YYACCEPT = 30,                  /* $accept  */
-  YYSYMBOL_program = 31,                   /* program  */
-  YYSYMBOL_statement_list = 32,            /* statement_list  */
-  YYSYMBOL_statement = 33,                 /* statement  */
-  YYSYMBOL_command = 34,                   /* command  */
-  YYSYMBOL_expression_list = 35,           /* expression_list  */
-  YYSYMBOL_expression = 36,                /* expression  */
-  YYSYMBOL_assignment = 37                 /* assignment  */
+  YYSYMBOL_NUMBER = 3,                     /* NUMBER  */
+  YYSYMBOL_VARIABLE = 4,                   /* VARIABLE  */
+  YYSYMBOL_EQUALS = 5,                     /* EQUALS  */
+  YYSYMBOL_PLUS = 6,                       /* PLUS  */
+  YYSYMBOL_MINUS = 7,                      /* MINUS  */
+  YYSYMBOL_MULT = 8,                       /* MULT  */
+  YYSYMBOL_DIV = 9,                        /* DIV  */
+  YYSYMBOL_LEFT_PAREN = 10,                /* LEFT_PAREN  */
+  YYSYMBOL_RIGHT_PAREN = 11,               /* RIGHT_PAREN  */
+  YYSYMBOL_SEMI = 12,                      /* SEMI  */
+  YYSYMBOL_END = 13,                       /* END  */
+  YYSYMBOL_UMINUS = 14,                    /* UMINUS  */
+  YYSYMBOL_YYACCEPT = 15,                  /* $accept  */
+  YYSYMBOL_program = 16,                   /* program  */
+  YYSYMBOL_statement_list = 17,            /* statement_list  */
+  YYSYMBOL_statement = 18,                 /* statement  */
+  YYSYMBOL_assignment = 19,                /* assignment  */
+  YYSYMBOL_expr = 20                       /* expr  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -452,15 +391,13 @@ void free (void *); /* INFRINGES ON USER NAME SPACE */
 
 #if (! defined yyoverflow \
      && (! defined __cplusplus \
-         || (defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL \
-             && defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
+         || (defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
 
 /* A type that is properly aligned for any stack member.  */
 union yyalloc
 {
   yy_state_t yyss_alloc;
   YYSTYPE yyvs_alloc;
-  YYLTYPE yyls_alloc;
 };
 
 /* The size of the maximum gap between one aligned stack and the next.  */
@@ -469,9 +406,8 @@ union yyalloc
 /* The size of an array large to enough to hold all stacks, each with
    N elements.  */
 # define YYSTACK_BYTES(N) \
-     ((N) * (YYSIZEOF (yy_state_t) + YYSIZEOF (YYSTYPE) \
-             + YYSIZEOF (YYLTYPE)) \
-      + 2 * YYSTACK_GAP_MAXIMUM)
+     ((N) * (YYSIZEOF (yy_state_t) + YYSIZEOF (YYSTYPE)) \
+      + YYSTACK_GAP_MAXIMUM)
 
 # define YYCOPY_NEEDED 1
 
@@ -514,21 +450,21 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  31
+#define YYFINAL  14
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   50
+#define YYLAST   35
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  30
+#define YYNTOKENS  15
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  8
+#define YYNNTS  6
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  26
+#define YYNRULES  15
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  45
+#define YYNSTATES  29
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   283
+#define YYMAXUTOK   269
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -543,7 +479,7 @@ union yyalloc
 static const yytype_int8 yytranslate[] =
 {
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      29,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -568,18 +504,15 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
-      15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
-      25,    26,    27,    28
+       5,     6,     7,     8,     9,    10,    11,    12,    13,    14
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    89,    89,    91,    92,    94,    95,    97,    98,    99,
-     100,   101,   102,   103,   104,   105,   106,   107,   109,   110,
-     112,   113,   114,   115,   116,   117,   119
+       0,    24,    24,    27,    28,    32,    33,    37,    41,    42,
+      43,    44,    45,    46,    54,    55
 };
 #endif
 
@@ -595,12 +528,10 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "\"end of file\"", "error", "\"invalid token\"", "SEP", "EQUALS",
-  "MINUS", "SEMI", "NOT_SURE", "PENUP", "PENDOWN", "CHANGE_COLOR", "COLOR",
-  "CLEAR", "TURN", "LOOP", "MOVE", "NUMBER", "END", "SAVE", "VARIABLE",
-  "PATH", "PLUS", "SUB", "MULT", "DIV", "STRING", "QSTRING", "GOTO",
-  "WHERE", "'\\n'", "$accept", "program", "statement_list", "statement",
-  "command", "expression_list", "expression", "assignment", YY_NULLPTR
+  "\"end of file\"", "error", "\"invalid token\"", "NUMBER", "VARIABLE",
+  "EQUALS", "PLUS", "MINUS", "MULT", "DIV", "LEFT_PAREN", "RIGHT_PAREN",
+  "SEMI", "END", "UMINUS", "$accept", "program", "statement_list",
+  "statement", "assignment", "expr", YY_NULLPTR
 };
 
 static const char *
@@ -610,12 +541,12 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-25)
+#define YYPACT_NINF (-4)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
 
-#define YYTABLE_NINF (-4)
+#define YYTABLE_NINF (-1)
 
 #define yytable_value_is_error(Yyn) \
   0
@@ -624,11 +555,9 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      20,   -24,   -25,   -25,    -7,   -25,    -3,     3,     1,     0,
-      26,    24,   -25,    41,    25,    -1,    37,   -25,    18,   -25,
-     -25,    28,   -25,   -25,    18,    18,    18,    18,   -25,    18,
-      29,   -25,   -25,   -25,   -25,   -25,   -25,    30,   -25,   -25,
-     -25,   -25,   -25,   -25,   -25
+      -1,    -4,     5,     1,     1,    14,    10,    -1,    12,    13,
+       1,    -4,    -4,    20,    -4,    -4,    -4,    -4,     1,     1,
+       1,     1,    -4,    26,    -4,     4,     4,    -4,    -4
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -636,23 +565,21 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,     0,     7,     8,     0,    11,     0,     0,    24,     0,
-      25,     0,    15,     0,     0,     0,     0,    16,    18,    17,
-       6,     0,    12,    13,     0,     0,     0,     0,     9,     0,
-       0,     1,     2,     4,     5,    25,    19,     0,    20,    22,
-      21,    23,    26,    14,    10
+       0,     8,     9,     0,     0,     0,     0,     3,     0,     0,
+       0,     9,    15,     0,     1,     2,     4,     5,     0,     0,
+       0,     0,     6,     7,    14,    10,    11,    12,    13
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -25,   -25,    34,   -25,   -25,    32,   -23,   -25
+      -4,    -4,    23,    -4,    -4,    -3
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,    13,    14,    15,    16,    17,    18,    19
+       0,     5,     6,     7,     8,     9
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -660,49 +587,41 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-       1,    38,    39,    40,    41,    20,    42,     2,     3,    21,
-       4,     5,     6,    22,     7,     8,    -3,     9,    10,    23,
-      28,     1,    24,    25,    26,    27,    11,    12,     2,     3,
-      29,     4,     5,     6,     8,     7,     8,    35,     9,    10,
-      30,    31,    32,    34,    37,    43,    44,    11,    12,    33,
-      36
+      12,    13,     1,     2,     1,    11,     3,    23,     3,     4,
+      10,     4,    20,    21,    14,    25,    26,    27,    28,    18,
+      19,    20,    21,    15,    17,    22,    18,    19,    20,    21,
+      16,    24,    18,    19,    20,    21
 };
 
 static const yytype_int8 yycheck[] =
 {
-       1,    24,    25,    26,    27,    29,    29,     8,     9,    16,
-      11,    12,    13,    16,    15,    16,    17,    18,    19,    16,
-      20,     1,    21,    22,    23,    24,    27,    28,     8,     9,
-       4,    11,    12,    13,    16,    15,    16,    19,    18,    19,
-      16,     0,    17,     6,    16,    16,    16,    27,    28,    15,
-      18
+       3,     4,     3,     4,     3,     4,     7,    10,     7,    10,
+       5,    10,     8,     9,     0,    18,    19,    20,    21,     6,
+       7,     8,     9,    13,    12,    12,     6,     7,     8,     9,
+       7,    11,     6,     7,     8,     9
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     1,     8,     9,    11,    12,    13,    15,    16,    18,
-      19,    27,    28,    31,    32,    33,    34,    35,    36,    37,
-      29,    16,    16,    16,    21,    22,    23,    24,    20,     4,
-      16,     0,    17,    32,     6,    19,    35,    16,    36,    36,
-      36,    36,    36,    16,    16
+       0,     3,     4,     7,    10,    16,    17,    18,    19,    20,
+       5,     4,    20,    20,     0,    13,    17,    12,     6,     7,
+       8,     9,    12,    20,    11,    20,    20,    20,    20
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    30,    31,    32,    32,    33,    33,    34,    34,    34,
-      34,    34,    34,    34,    34,    34,    34,    34,    35,    35,
-      36,    36,    36,    36,    36,    36,    37
+       0,    15,    16,    17,    17,    18,    18,    19,    20,    20,
+      20,    20,    20,    20,    20,    20
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     2,     1,     2,     2,     2,     1,     1,     2,
-       4,     1,     2,     2,     3,     1,     1,     1,     1,     2,
-       3,     3,     3,     3,     1,     1,     3
+       0,     2,     2,     1,     2,     2,     2,     3,     1,     1,
+       3,     3,     3,     3,     3,     2
 };
 
 
@@ -740,32 +659,6 @@ enum { YYENOMEM = -2 };
    Use YYerror or YYUNDEF. */
 #define YYERRCODE YYUNDEF
 
-/* YYLLOC_DEFAULT -- Set CURRENT to span from RHS[1] to RHS[N].
-   If N is 0, then set CURRENT to the empty location which ends
-   the previous symbol: RHS[0] (always defined).  */
-
-#ifndef YYLLOC_DEFAULT
-# define YYLLOC_DEFAULT(Current, Rhs, N)                                \
-    do                                                                  \
-      if (N)                                                            \
-        {                                                               \
-          (Current).first_line   = YYRHSLOC (Rhs, 1).first_line;        \
-          (Current).first_column = YYRHSLOC (Rhs, 1).first_column;      \
-          (Current).last_line    = YYRHSLOC (Rhs, N).last_line;         \
-          (Current).last_column  = YYRHSLOC (Rhs, N).last_column;       \
-        }                                                               \
-      else                                                              \
-        {                                                               \
-          (Current).first_line   = (Current).last_line   =              \
-            YYRHSLOC (Rhs, 0).last_line;                                \
-          (Current).first_column = (Current).last_column =              \
-            YYRHSLOC (Rhs, 0).last_column;                              \
-        }                                                               \
-    while (0)
-#endif
-
-#define YYRHSLOC(Rhs, K) ((Rhs)[K])
-
 
 /* Enable debugging if requested.  */
 #if YYDEBUG
@@ -782,63 +675,6 @@ do {                                            \
 } while (0)
 
 
-/* YYLOCATION_PRINT -- Print the location on the stream.
-   This macro was not mandated originally: define only if we know
-   we won't break user code: when these are the locations we know.  */
-
-# ifndef YYLOCATION_PRINT
-
-#  if defined YY_LOCATION_PRINT
-
-   /* Temporary convenience wrapper in case some people defined the
-      undocumented and private YY_LOCATION_PRINT macros.  */
-#   define YYLOCATION_PRINT(File, Loc)  YY_LOCATION_PRINT(File, *(Loc))
-
-#  elif defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL
-
-/* Print *YYLOCP on YYO.  Private, do not rely on its existence. */
-
-YY_ATTRIBUTE_UNUSED
-static int
-yy_location_print_ (FILE *yyo, YYLTYPE const * const yylocp)
-{
-  int res = 0;
-  int end_col = 0 != yylocp->last_column ? yylocp->last_column - 1 : 0;
-  if (0 <= yylocp->first_line)
-    {
-      res += YYFPRINTF (yyo, "%d", yylocp->first_line);
-      if (0 <= yylocp->first_column)
-        res += YYFPRINTF (yyo, ".%d", yylocp->first_column);
-    }
-  if (0 <= yylocp->last_line)
-    {
-      if (yylocp->first_line < yylocp->last_line)
-        {
-          res += YYFPRINTF (yyo, "-%d", yylocp->last_line);
-          if (0 <= end_col)
-            res += YYFPRINTF (yyo, ".%d", end_col);
-        }
-      else if (0 <= end_col && yylocp->first_column < end_col)
-        res += YYFPRINTF (yyo, "-%d", end_col);
-    }
-  return res;
-}
-
-#   define YYLOCATION_PRINT  yy_location_print_
-
-    /* Temporary convenience wrapper in case some people defined the
-       undocumented and private YY_LOCATION_PRINT macros.  */
-#   define YY_LOCATION_PRINT(File, Loc)  YYLOCATION_PRINT(File, &(Loc))
-
-#  else
-
-#   define YYLOCATION_PRINT(File, Loc) ((void) 0)
-    /* Temporary convenience wrapper in case some people defined the
-       undocumented and private YY_LOCATION_PRINT macros.  */
-#   define YY_LOCATION_PRINT  YYLOCATION_PRINT
-
-#  endif
-# endif /* !defined YYLOCATION_PRINT */
 
 
 # define YY_SYMBOL_PRINT(Title, Kind, Value, Location)                    \
@@ -847,7 +683,7 @@ do {                                                                      \
     {                                                                     \
       YYFPRINTF (stderr, "%s ", Title);                                   \
       yy_symbol_print (stderr,                                            \
-                  Kind, Value, Location); \
+                  Kind, Value); \
       YYFPRINTF (stderr, "\n");                                           \
     }                                                                     \
 } while (0)
@@ -859,11 +695,10 @@ do {                                                                      \
 
 static void
 yy_symbol_value_print (FILE *yyo,
-                       yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp)
+                       yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep)
 {
   FILE *yyoutput = yyo;
   YY_USE (yyoutput);
-  YY_USE (yylocationp);
   if (!yyvaluep)
     return;
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
@@ -878,14 +713,12 @@ yy_symbol_value_print (FILE *yyo,
 
 static void
 yy_symbol_print (FILE *yyo,
-                 yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp)
+                 yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep)
 {
   YYFPRINTF (yyo, "%s %s (",
              yykind < YYNTOKENS ? "token" : "nterm", yysymbol_name (yykind));
 
-  YYLOCATION_PRINT (yyo, yylocationp);
-  YYFPRINTF (yyo, ": ");
-  yy_symbol_value_print (yyo, yykind, yyvaluep, yylocationp);
+  yy_symbol_value_print (yyo, yykind, yyvaluep);
   YYFPRINTF (yyo, ")");
 }
 
@@ -918,7 +751,7 @@ do {                                                            \
 `------------------------------------------------*/
 
 static void
-yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp, YYLTYPE *yylsp,
+yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp,
                  int yyrule)
 {
   int yylno = yyrline[yyrule];
@@ -932,8 +765,7 @@ yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp, YYLTYPE *yylsp,
       YYFPRINTF (stderr, "   $%d = ", yyi + 1);
       yy_symbol_print (stderr,
                        YY_ACCESSING_SYMBOL (+yyssp[yyi + 1 - yynrhs]),
-                       &yyvsp[(yyi + 1) - (yynrhs)],
-                       &(yylsp[(yyi + 1) - (yynrhs)]));
+                       &yyvsp[(yyi + 1) - (yynrhs)]);
       YYFPRINTF (stderr, "\n");
     }
 }
@@ -941,7 +773,7 @@ yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp, YYLTYPE *yylsp,
 # define YY_REDUCE_PRINT(Rule)          \
 do {                                    \
   if (yydebug)                          \
-    yy_reduce_print (yyssp, yyvsp, yylsp, Rule); \
+    yy_reduce_print (yyssp, yyvsp, Rule); \
 } while (0)
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
@@ -982,10 +814,9 @@ int yydebug;
 
 static void
 yydestruct (const char *yymsg,
-            yysymbol_kind_t yykind, YYSTYPE *yyvaluep, YYLTYPE *yylocationp)
+            yysymbol_kind_t yykind, YYSTYPE *yyvaluep)
 {
   YY_USE (yyvaluep);
-  YY_USE (yylocationp);
   if (!yymsg)
     yymsg = "Deleting";
   YY_SYMBOL_PRINT (yymsg, yykind, yyvaluep, yylocationp);
@@ -1001,12 +832,6 @@ int yychar;
 
 /* The semantic value of the lookahead symbol.  */
 YYSTYPE yylval;
-/* Location data for the lookahead symbol.  */
-YYLTYPE yylloc
-# if defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL
-  = { 1, 1, 1, 1 }
-# endif
-;
 /* Number of syntax errors so far.  */
 int yynerrs;
 
@@ -1040,11 +865,6 @@ yyparse (void)
     YYSTYPE *yyvs = yyvsa;
     YYSTYPE *yyvsp = yyvs;
 
-    /* The location stack: array, bottom, top.  */
-    YYLTYPE yylsa[YYINITDEPTH];
-    YYLTYPE *yyls = yylsa;
-    YYLTYPE *yylsp = yyls;
-
   int yyn;
   /* The return value of yyparse.  */
   int yyresult;
@@ -1053,14 +873,10 @@ yyparse (void)
   /* The variables used to return semantic value and location from the
      action routines.  */
   YYSTYPE yyval;
-  YYLTYPE yyloc;
-
-  /* The locations where the error started and ended.  */
-  YYLTYPE yyerror_range[3];
 
 
 
-#define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N), yylsp -= (N))
+#define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N))
 
   /* The number of symbols on the RHS of the reduced rule.
      Keep to zero when no symbol should be popped.  */
@@ -1070,7 +886,6 @@ yyparse (void)
 
   yychar = YYEMPTY; /* Cause a token to be read.  */
 
-  yylsp[0] = yylloc;
   goto yysetstate;
 
 
@@ -1109,7 +924,6 @@ yysetstate:
            memory.  */
         yy_state_t *yyss1 = yyss;
         YYSTYPE *yyvs1 = yyvs;
-        YYLTYPE *yyls1 = yyls;
 
         /* Each stack pointer address is followed by the size of the
            data in use in that stack, in bytes.  This used to be a
@@ -1118,11 +932,9 @@ yysetstate:
         yyoverflow (YY_("memory exhausted"),
                     &yyss1, yysize * YYSIZEOF (*yyssp),
                     &yyvs1, yysize * YYSIZEOF (*yyvsp),
-                    &yyls1, yysize * YYSIZEOF (*yylsp),
                     &yystacksize);
         yyss = yyss1;
         yyvs = yyvs1;
-        yyls = yyls1;
       }
 # else /* defined YYSTACK_RELOCATE */
       /* Extend the stack our own way.  */
@@ -1141,7 +953,6 @@ yysetstate:
           YYNOMEM;
         YYSTACK_RELOCATE (yyss_alloc, yyss);
         YYSTACK_RELOCATE (yyvs_alloc, yyvs);
-        YYSTACK_RELOCATE (yyls_alloc, yyls);
 #  undef YYSTACK_RELOCATE
         if (yyss1 != yyssa)
           YYSTACK_FREE (yyss1);
@@ -1150,7 +961,6 @@ yysetstate:
 
       yyssp = yyss + yysize - 1;
       yyvsp = yyvs + yysize - 1;
-      yylsp = yyls + yysize - 1;
 
       YY_IGNORE_USELESS_CAST_BEGIN
       YYDPRINTF ((stderr, "Stack size increased to %ld\n",
@@ -1204,7 +1014,6 @@ yybackup:
          loop in error recovery. */
       yychar = YYUNDEF;
       yytoken = YYSYMBOL_YYerror;
-      yyerror_range[1] = yylloc;
       goto yyerrlab1;
     }
   else
@@ -1238,7 +1047,6 @@ yybackup:
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
   *++yyvsp = yylval;
   YY_IGNORE_MAYBE_UNINITIALIZED_END
-  *++yylsp = yylloc;
 
   /* Discard the shifted token.  */
   yychar = YYEMPTY;
@@ -1272,122 +1080,85 @@ yyreduce:
      GCC warning that YYVAL may be used uninitialized.  */
   yyval = yyvsp[1-yylen];
 
-  /* Default location. */
-  YYLLOC_DEFAULT (yyloc, (yylsp - yylen), yylen);
-  yyerror_range[1] = yyloc;
+
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
   case 2: /* program: statement_list END  */
-#line 89 "gvlogo.y"
-                                                                        { printf("Program complete."); shutdown(); exit(0); }
-#line 1285 "gvlogo.tab.c"
+#line 24 "calc.y"
+                                                 { printf("Thanks!\n"); return 0; }
+#line 1091 "calc.tab.c"
     break;
 
-  case 5: /* statement: command SEMI  */
-#line 94 "gvlogo.y"
-                                                                        { prompt(); }
-#line 1291 "gvlogo.tab.c"
+  case 6: /* statement: expr SEMI  */
+#line 33 "calc.y"
+                                         { printf("= %f\n", (yyvsp[-1].num)); }
+#line 1097 "calc.tab.c"
     break;
 
-  case 6: /* statement: error '\n'  */
-#line 95 "gvlogo.y"
-                                                                                        { yyerrok; prompt(); }
-#line 1297 "gvlogo.tab.c"
+  case 7: /* assignment: VARIABLE EQUALS expr  */
+#line 37 "calc.y"
+                                         { symbol_table[(yyvsp[-2].var)] = (yyvsp[0].num); printf("Variable stored.\n"); }
+#line 1103 "calc.tab.c"
     break;
 
-  case 7: /* command: PENUP  */
-#line 97 "gvlogo.y"
-                                                                                { penup(); }
-#line 1303 "gvlogo.tab.c"
+  case 8: /* expr: NUMBER  */
+#line 41 "calc.y"
+                                         { (yyval.num) = (yyvsp[0].num); }
+#line 1109 "calc.tab.c"
     break;
 
-  case 8: /* command: PENDOWN  */
-#line 98 "gvlogo.y"
-                                                                                        { pendown(); }
-#line 1309 "gvlogo.tab.c"
+  case 9: /* expr: VARIABLE  */
+#line 42 "calc.y"
+                                                     { (yyval.num) = symbol_table[(yyvsp[0].var)];}
+#line 1115 "calc.tab.c"
     break;
 
-  case 9: /* command: SAVE PATH  */
-#line 99 "gvlogo.y"
-                                                                                        { save((yyvsp[0].s)); }
-#line 1315 "gvlogo.tab.c"
+  case 10: /* expr: expr PLUS expr  */
+#line 43 "calc.y"
+                                         { (yyval.num) = (yyvsp[-2].num) + (yyvsp[0].num); }
+#line 1121 "calc.tab.c"
     break;
 
-  case 10: /* command: COLOR NUMBER NUMBER NUMBER  */
-#line 100 "gvlogo.y"
-                                                                        { change_color((yyvsp[-2].f), (yyvsp[-1].f), (yyvsp[0].f)); }
-#line 1321 "gvlogo.tab.c"
+  case 11: /* expr: expr MINUS expr  */
+#line 44 "calc.y"
+                                         { (yyval.num) = (yyvsp[-2].num) - (yyvsp[0].num); }
+#line 1127 "calc.tab.c"
     break;
 
-  case 11: /* command: CLEAR  */
-#line 101 "gvlogo.y"
-                                                                                        { clear(); }
-#line 1327 "gvlogo.tab.c"
+  case 12: /* expr: expr MULT expr  */
+#line 45 "calc.y"
+                                         { (yyval.num) = (yyvsp[-2].num) * (yyvsp[0].num); }
+#line 1133 "calc.tab.c"
     break;
 
-  case 12: /* command: TURN NUMBER  */
-#line 102 "gvlogo.y"
-                                                                                        { turn((yyvsp[0].f)); }
-#line 1333 "gvlogo.tab.c"
+  case 13: /* expr: expr DIV expr  */
+#line 46 "calc.y"
+                                         { 
+                                           if ((yyvsp[0].num) == 0) {
+                                             yyerror("Division by zero");
+                                             (yyval.num) = 0;
+                                           } else {
+                                             (yyval.num) = (yyvsp[-2].num) / (yyvsp[0].num);
+                                           }
+                                         }
+#line 1146 "calc.tab.c"
     break;
 
-  case 13: /* command: MOVE NUMBER  */
-#line 103 "gvlogo.y"
-                                                                                        { move((yyvsp[0].f)); }
-#line 1339 "gvlogo.tab.c"
+  case 14: /* expr: LEFT_PAREN expr RIGHT_PAREN  */
+#line 54 "calc.y"
+                                         { (yyval.num) = (yyvsp[-1].num); }
+#line 1152 "calc.tab.c"
     break;
 
-  case 14: /* command: GOTO NUMBER NUMBER  */
-#line 104 "gvlogo.y"
-                                                                                { go_to((yyvsp[-1].f), (yyvsp[0].f)); }
-#line 1345 "gvlogo.tab.c"
-    break;
-
-  case 15: /* command: WHERE  */
-#line 105 "gvlogo.y"
-                                                                                        { where(); }
-#line 1351 "gvlogo.tab.c"
-    break;
-
-  case 20: /* expression: NUMBER PLUS expression  */
-#line 112 "gvlogo.y"
-                                                                { (yyval.f) = (yyvsp[-2].f) + (yyvsp[0].f); printf("%f\n", (yyval.f)); }
-#line 1357 "gvlogo.tab.c"
-    break;
-
-  case 21: /* expression: NUMBER MULT expression  */
-#line 113 "gvlogo.y"
-                                                                        { (yyval.f) = (yyvsp[-2].f) * (yyvsp[0].f); printf("%f\n", (yyval.f)); }
-#line 1363 "gvlogo.tab.c"
-    break;
-
-  case 22: /* expression: NUMBER SUB expression  */
-#line 114 "gvlogo.y"
-                                                                        { (yyval.f) = (yyvsp[-2].f) - (yyvsp[0].f); printf("%f\n", (yyval.f)); }
-#line 1369 "gvlogo.tab.c"
-    break;
-
-  case 23: /* expression: NUMBER DIV expression  */
-#line 115 "gvlogo.y"
-                                                                        { (yyval.f) = (yyvsp[-2].f) / (yyvsp[0].f); printf("%f\n", (yyval.f)); }
-#line 1375 "gvlogo.tab.c"
-    break;
-
-  case 25: /* expression: VARIABLE  */
-#line 117 "gvlogo.y"
-                                                                                        { (yyval.f) = symbol_table[(yyvsp[0].v)]; }
-#line 1381 "gvlogo.tab.c"
-    break;
-
-  case 26: /* assignment: VARIABLE EQUALS expression  */
-#line 119 "gvlogo.y"
-                                                                { symbol_table[(yyvsp[-2].v)] = (yyvsp[0].f); printf("Variable stored.\n"); }
-#line 1387 "gvlogo.tab.c"
+  case 15: /* expr: MINUS expr  */
+#line 55 "calc.y"
+                                         { (yyval.num) = -(yyvsp[0].num); }
+#line 1158 "calc.tab.c"
     break;
 
 
-#line 1391 "gvlogo.tab.c"
+#line 1162 "calc.tab.c"
 
       default: break;
     }
@@ -1408,7 +1179,6 @@ yyreduce:
   yylen = 0;
 
   *++yyvsp = yyval;
-  *++yylsp = yyloc;
 
   /* Now 'shift' the result of the reduction.  Determine what state
      that goes to, based on the state we popped back to and the rule
@@ -1438,7 +1208,6 @@ yyerrlab:
       yyerror (YY_("syntax error"));
     }
 
-  yyerror_range[1] = yylloc;
   if (yyerrstatus == 3)
     {
       /* If just tried and failed to reuse lookahead token after an
@@ -1453,7 +1222,7 @@ yyerrlab:
       else
         {
           yydestruct ("Error: discarding",
-                      yytoken, &yylval, &yylloc);
+                      yytoken, &yylval);
           yychar = YYEMPTY;
         }
     }
@@ -1507,9 +1276,9 @@ yyerrlab1:
       if (yyssp == yyss)
         YYABORT;
 
-      yyerror_range[1] = *yylsp;
+
       yydestruct ("Error: popping",
-                  YY_ACCESSING_SYMBOL (yystate), yyvsp, yylsp);
+                  YY_ACCESSING_SYMBOL (yystate), yyvsp);
       YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
@@ -1519,9 +1288,6 @@ yyerrlab1:
   *++yyvsp = yylval;
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 
-  yyerror_range[2] = yylloc;
-  ++yylsp;
-  YYLLOC_DEFAULT (*yylsp, yyerror_range, 2);
 
   /* Shift the error token.  */
   YY_SYMBOL_PRINT ("Shifting", YY_ACCESSING_SYMBOL (yyn), yyvsp, yylsp);
@@ -1565,7 +1331,7 @@ yyreturnlab:
          user semantic actions for why this is necessary.  */
       yytoken = YYTRANSLATE (yychar);
       yydestruct ("Cleanup: discarding lookahead",
-                  yytoken, &yylval, &yylloc);
+                  yytoken, &yylval);
     }
   /* Do not reclaim the symbols of the rule whose action triggered
      this YYABORT or YYACCEPT.  */
@@ -1574,7 +1340,7 @@ yyreturnlab:
   while (yyssp != yyss)
     {
       yydestruct ("Cleanup: popping",
-                  YY_ACCESSING_SYMBOL (+*yyssp), yyvsp, yylsp);
+                  YY_ACCESSING_SYMBOL (+*yyssp), yyvsp);
       YYPOPSTACK (1);
     }
 #ifndef yyoverflow
@@ -1585,197 +1351,14 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 121 "gvlogo.y"
+#line 57 "calc.y"
 
-
-int main(int argc, char** argv){
-	startup();
-	return 0;
+ 
+void yyerror(const char *s) {
+    fprintf(stderr, "Error: %s\n", s);
 }
-
-int yyerror(const char* s){
-	printf("Error: %s\n", s);
-	return -1;
-};
-
-// Add functions here
-
-// Moves the turtle to a particular coordinate. Draws if the pen is down, otherwise, does not. 
-void go_to(double x2, double y2) { 
-	int distance; 
-	printf("Inside of go_to function.\n"); 
-	printf("%f, %f\n", x, y); 
-	printf("x2 = %f; y2 = %f\n", x2, y2); 
-	if (x2 < x) {
-		printf("x2 < x\n"); 
-		distance = x - x2; 
-		turn(180); 
-		move(distance);
-		turn(180); 
-	}
-	if (x2 > x) {
-		printf("x2 > x\n");
-		distance = x2 - x; 
-		move(distance);
-	}
-	
-	if (y2 < y) {
-		printf("y2 < y\n"); 
-		distance = y - y2; 
-		turn(270);
-		move(distance);
-		turn(90); 
-	}
-	if (y2 > y) {
-		printf("y2 > y\n"); 
-		distance = y2 - y; 
-		turn(90); 
-		move(distance);
-		turn(270);
-	}
-}
-
-// Prints the current coordinates. 
-void where() {
-	printf("Current coordinates: %f, %f\n", x, y);
-}
-
-void prompt(){
-	printf("gv_logo > ");
-}
-
-void penup(){
-	event.type = PEN_EVENT;		
-	event.user.code = 0;
-	SDL_PushEvent(&event);
-	printf("Pen is up.\n"); 
-}
-
-void pendown() {
-	event.type = PEN_EVENT;		
-	event.user.code = 1;
-	SDL_PushEvent(&event);
-	printf("Pen is down.\n");
-}
-
-void move(int num){
-	printf("Moved to %d\n", num); 
-	event.type = DRAW_EVENT;
-	event.user.code = 1;
-	event.user.data1 = num;
-	SDL_PushEvent(&event);
-}
-
-void turn(int dir){
-	event.type = PEN_EVENT;
-	event.user.code = 2;
-	event.user.data1 = dir;
-	SDL_PushEvent(&event);
-}
-
-void output(const char* s){
-	printf("%s\n", s);
-}
-
-void change_color(int r, int g, int b){
-	event.type = COLOR_EVENT;
-	current_color.r = r;
-	current_color.g = g;
-	current_color.b = b;
-	SDL_PushEvent(&event);
-}
-
-void clear(){
-	event.type = DRAW_EVENT;
-	event.user.code = 2;
-	SDL_PushEvent(&event);
-}
-
-void startup(){
-	SDL_Init(SDL_INIT_VIDEO);
-	window = SDL_CreateWindow("GV-Logo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
-	if (window == NULL){
-		yyerror("Can't create SDL window.\n");
-	}
-	
-	//rend = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
-	rend = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE | SDL_RENDERER_TARGETTEXTURE);
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
-	texture = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, WIDTH, HEIGHT);
-	if(texture == NULL){
-		printf("Texture NULL.\n");
-		exit(1);
-	}
-	SDL_SetRenderTarget(rend, texture);
-	SDL_RenderSetScale(rend, 3.0, 3.0);
-
-	background_id = SDL_CreateThread(run, "Parser thread", (void*)NULL);
-	if(background_id == NULL){
-		yyerror("Can't create thread.");
-	}
-	while(running){
-		SDL_Event e;
-		while( SDL_PollEvent(&e) ){
-			if(e.type == SDL_QUIT){
-				running = 0;
-			}
-			if(e.type == PEN_EVENT){
-				if(e.user.code == 2){
-					double degrees = ((int)e.user.data1) * M_PI / 180.0;
-					direction += degrees;
-				}
-				pen_state = e.user.code;
-			}
-			if(e.type == DRAW_EVENT){
-				if(e.user.code == 1){
-					int num = (int)event.user.data1;
-					double x2 = x + num * cos(direction);
-					double y2 = y + num * sin(direction);
-					if(pen_state != 0){
-						SDL_SetRenderTarget(rend, texture);
-						SDL_RenderDrawLine(rend, x, y, x2, y2);
-						SDL_SetRenderTarget(rend, NULL);
-						SDL_RenderCopy(rend, texture, NULL, NULL);
-					}
-					x = x2;
-					y = y2;
-				} else if(e.user.code == 2){
-					SDL_SetRenderTarget(rend, texture);
-					SDL_RenderClear(rend);
-					SDL_SetTextureColorMod(texture, current_color.r, current_color.g, current_color.b);
-					SDL_SetRenderTarget(rend, NULL);
-					SDL_RenderClear(rend);
-				}
-			}
-			if(e.type == COLOR_EVENT){
-				SDL_SetRenderTarget(rend, NULL);
-				SDL_SetRenderDrawColor(rend, current_color.r, current_color.g, current_color.b, 255);
-			}
-			if(e.type == SDL_KEYDOWN){
-			}
-
-		}
-		//SDL_RenderClear(rend);
-		SDL_RenderPresent(rend);
-		SDL_Delay(1000 / 60);
-	}
-}
-
-int run(void* data){
-	prompt();
-	yyparse();
-}
-
-void shutdown(){
-	running = 0;
-	SDL_WaitThread(background_id, NULL);
-	SDL_DestroyWindow(window);
-	SDL_Quit();
-}
-
-void save(const char* path){
-	SDL_Surface *surface = SDL_CreateRGBSurface(0, WIDTH, HEIGHT, 32, 0, 0, 0, 0);
-	SDL_RenderReadPixels(rend, NULL, SDL_PIXELFORMAT_ARGB8888, surface->pixels, surface->pitch);
-	SDL_SaveBMP(surface, path);
-	SDL_FreeSurface(surface);
+ 
+int main(void) {
+    printf("Enter expressions, press Ctrl+D to quit.\n");
+    return yyparse();
 }
