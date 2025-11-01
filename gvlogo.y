@@ -32,6 +32,7 @@ static double direction = 0.0;
 
 int yylex(void);
 int yyerror(const char* s);
+double symbol_table[26]; 
 void startup();
 int run(void* data);
 void prompt();
@@ -52,6 +53,7 @@ void where();
 
 %union {
 	float f;
+	char v; 
 	char* s;
 }
 
@@ -73,11 +75,11 @@ void where();
 %token NUMBER
 %token END
 %token SAVE
-%token<s> VARIABLE
+%token<v> VARIABLE
 %token<s> PATH
 %token PLUS SUB MULT DIV
 %token<s> STRING QSTRING
-%type<f> expression expression_list NUMBER
+%type<f> expression expression_list assignment NUMBER
 //add goto and where
 %token GOTO
 %token WHERE
@@ -89,7 +91,7 @@ program:		statement_list END				{ printf("Program complete."); shutdown(); exit(
 statement_list:		statement					
 		|	statement statement_list
 		;
-statement:		command SEMI						{ prompt(); }
+statement:		command SEMI					{ prompt(); }
 		|	error '\n' 							{ yyerrok; prompt(); }
 		;
 command:		PENUP							{ penup(); }
@@ -102,16 +104,19 @@ command:		PENUP							{ penup(); }
 		|	GOTO NUMBER NUMBER					{ go_to($2, $3); }
 		|	WHERE								{ where(); }
 		|	expression_list
+		| 	assignment
 		;
 expression_list:	expression
 		|	expression expression_list
 		;
-expression:		NUMBER PLUS expression			{ $$ = $1 + $3; printf("%f\n", $$); }
+expression:	NUMBER PLUS expression				{ $$ = $1 + $3; printf("%f\n", $$); }
 		|	NUMBER MULT expression				{ $$ = $1 * $3; printf("%f\n", $$); }
 		|	NUMBER SUB expression				{ $$ = $1 - $3; printf("%f\n", $$); }
 		|	NUMBER DIV expression				{ $$ = $1 / $3; printf("%f\n", $$); }
 		|	NUMBER
+		|	VARIABLE							{ $$ = symbol_table[$1]; }
 		;
+assignment:	VARIABLE EQUALS expression			{ symbol_table[$1] = $3; printf("Variable stored.\n"); };
 
 %%
 
